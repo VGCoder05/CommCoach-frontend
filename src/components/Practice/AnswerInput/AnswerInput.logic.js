@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useVoskSpeechRecognition } from '../../../hooks/useVoskSpeechRecognition';
 
 export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
@@ -20,11 +20,14 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   const wordCount = answer.trim().split(/\s+/).filter(Boolean).length;
 
   const handleToggleVoice = () => {
+    console.log("Trigger")
+    console.log(listening)
+
     if (listening) {
       stopListening();
     } else {
-      resetTranscript();
       startListening();
+      resetTranscript();
     }
   };
 

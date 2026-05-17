@@ -53,12 +53,13 @@ const AnswerInput = ({ question, onSubmit, isDiagnosing }) => {
         <span className="answer-input__word-count">{wordCount} words</span>
 
         <div className="answer-input__actions">
-          {browserSupportsSpeechRecognition && (
+          {/* {browserSupportsSpeechRecognition && ( */}
             <button
               type="button"
               className={`record-btn ${listening ? 'record-btn--active' : ''}`}
               onClick={handleToggleVoice}
             >
+              {console.log(listening)}
               {listening ? (
                 <>
                   <span className="record-dot" />
@@ -68,7 +69,7 @@ const AnswerInput = ({ question, onSubmit, isDiagnosing }) => {
                 <>🎙 Voice Input</>
               )}
             </button>
-          )}
+          {/* )} */}
 
           {answer && (
             <Button variant="ghost" size="sm" onClick={handleClear}>
