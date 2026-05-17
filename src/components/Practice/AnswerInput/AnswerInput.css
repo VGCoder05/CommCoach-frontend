@@ -1,0 +1,89 @@
+.answer-input { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.answer-input__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.answer-input__question {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-800);
+  line-height: var(--line-height-tight);
+}
+
+.answer-input__meta { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.answer-input__textarea-wrap { position: relative; }
+
+.answer-input__textarea {
+  width: 100%;
+  min-height: 280px;
+  padding: var(--space-4);
+  border: 1.5px solid var(--color-neutral-300);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-neutral-800);
+  background: var(--color-neutral-0);
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.answer-input__textarea:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+.answer-input__textarea--recording {
+  border-color: var(--color-error-400);
+  box-shadow: 0 0 0 3px var(--color-error-100);
+}
+
+.answer-input__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.answer-input__word-count {
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-400);
+}
+
+.answer-input__actions { display: flex; gap: var(--space-2); align-items: center; }
+
+.record-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border: 1.5px solid var(--color-neutral-300);
+  background: var(--color-neutral-0);
+  color: var(--color-neutral-700);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.record-btn--active {
+  border-color: var(--color-error-400);
+  color: var(--color-error-600);
+  animation: recordPulse 1.5s infinite;
+}
+.record-btn--active:hover {
+  background: var(--color-error-50);
+}
+
+.record-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-error-500);
+  animation: pulse 1s infinite;
+}

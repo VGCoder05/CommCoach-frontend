@@ -1,200 +1,103 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  Box,
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Avatar,
-  Menu,
-  MenuItem,
-  Divider,
-  useMediaQuery,
-  useTheme,
-} from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Dashboard,
-  Psychology,
-  TrendingUp,
-  History,
-  AccountCircle,
-  Logout,
-  EmojiEvents,
-} from '@mui/icons-material';
-import { logout } from '../../store/slices/authSlice';
-
-const drawerWidth = 240;
+import React from 'react';
+import { Outlet, NavLink } from 'react-router-dom';
+import { NAV_LINKS, useLayoutLogic } from './Layout.logic';
+import { Button } from '../ui';
+import './Layout.css';
 
 const Layout = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-
-  const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/' },
-    { text: 'Question Bank', icon: <Psychology />, path: '/questions' },
-    { text: 'Progress', icon: <TrendingUp />, path: '/progress' },
-    { text: 'History', icon: <History />, path: '/history' },
-  ];
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
-  const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
-
-  const drawer = (
-    <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 'bold' }}>
-          🎯 Coach
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-                if (isMobile) setMobileOpen(false);
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
+  const {
+    sidebarOpen,
+    toggleSidebar,
+    closeSidebar,
+    pageTitle,
+    user,
+    userInitials,
+    currentPath,
+    handleLogout,
+  } = useLayoutLogic();
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* AppBar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            Communication Coach
-          </Typography>
+    <div className="shell">
+      {/* Sidebar overlay (mobile) */}
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={closeSidebar} aria-hidden="true" />
+      )}
 
-          {/* Streak Display */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
-            <EmojiEvents sx={{ color: '#FFD700', mr: 0.5 }} />
-            <Typography variant="body2">
-              {user?.currentStreak || 0} day streak
-            </Typography>
-          </Box>
+      {/* Sidebar */}
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
+        {/* Logo */}
+        <NavLink to="/" className="sidebar__logo" onClick={closeSidebar}>
+          <div className="sidebar__logo-icon">🎯</div>
+          <div>
+            <div className="sidebar__logo-text">CommCoach</div>
+            <div className="sidebar__logo-sub">Interview Prep</div>
+          </div>
+        </NavLink>
 
-          {/* User Menu */}
-          <IconButton onClick={handleMenuOpen} color="inherit">
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-              {user?.name?.charAt(0).toUpperCase()}
-            </Avatar>
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMenuClose}
-          >
-            <MenuItem disabled>
-              <Typography variant="body2">{user?.email}</Typography>
-            </MenuItem>
-            <Divider />
-            <MenuItem onClick={handleLogout}>
-              <ListItemIcon>
-                <Logout fontSize="small" />
-              </ListItemIcon>
-              Logout
-            </MenuItem>
-          </Menu>
-        </Toolbar>
-      </AppBar>
+        {/* Nav */}
+        <nav className="sidebar__nav" aria-label="Main navigation">
+          {NAV_LINKS.map(({ to, icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              className={({ isActive }) =>
+                `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+              }
+              onClick={closeSidebar}
+            >
+              <span className="sidebar__link-icon">{icon}</span>
+              {label}
+            </NavLink>
+          ))}
+        </nav>
 
-      {/* Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
-      >
-        {/* Mobile drawer */}
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
+        {/* User footer */}
+        <div className="sidebar__footer">
+          {user && (
+            <div className="sidebar__user">
+              <div className="sidebar__avatar" aria-hidden="true">
+                {userInitials}
+              </div>
+              <div className="sidebar__user-info">
+                <div className="sidebar__user-name">{user.name}</div>
+                <div className="sidebar__user-role">Practitioner</div>
+              </div>
+            </div>
+          )}
+          <Button variant="ghost" size="sm" fullWidth onClick={handleLogout}>
+            🚪 Sign Out
+          </Button>
+        </div>
+      </aside>
 
-        {/* Desktop drawer */}
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+      {/* Main */}
+      <div className="main-area">
+        {/* Topbar */}
+        <header className="topbar">
+          <div className="topbar__left">
+            <button
+              className="topbar__menu-btn"
+              onClick={toggleSidebar}
+              aria-label="Toggle navigation"
+            >
+              ☰
+            </button>
+            <h1 className="topbar__title">{pageTitle}</h1>
+          </div>
+          <div className="topbar__right">
+            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-500)' }}>
+              Hi, {user?.name?.split(' ')[0]} 👋
+            </span>
+          </div>
+        </header>
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          mt: 8,
-        }}
-      >
-        <Outlet />
-      </Box>
-    </Box>
+        {/* Page */}
+        <main className="page-content">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 };
 

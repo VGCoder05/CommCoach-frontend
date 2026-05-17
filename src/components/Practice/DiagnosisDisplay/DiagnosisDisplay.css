@@ -1,0 +1,168 @@
+.diagnosis { display: flex; flex-direction: column; gap: var(--space-6); }
+
+/* Score overview */
+.diagnosis__scores {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-6);
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .diagnosis__scores { grid-template-columns: 1fr; }
+}
+
+.diagnosis__overall {
+  text-align: center;
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-primary-50);
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--color-primary-200);
+}
+.diagnosis__overall-num {
+  font-size: var(--font-size-4xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary-700);
+  line-height: 1;
+}
+.diagnosis__overall-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-primary-600);
+  font-weight: var(--font-weight-medium);
+  margin-top: var(--space-1);
+}
+
+.diagnosis__subscores { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Word improvements */
+.word-pair {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+}
+.word-pair__swap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.word-pair__from {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-error-50);
+  color: var(--color-error-700);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  text-decoration: line-through;
+}
+.word-pair__arrow { color: var(--color-neutral-400); }
+.word-pair__to {
+  padding: var(--space-1) var(--space-2);
+  background: var(--color-success-50);
+  color: var(--color-success-700);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+.word-pair__reason {
+  font-size: var(--font-size-xs);
+  color: var(--color-neutral-500);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.word-pair__sentences {
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-neutral-50);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--font-size-xs);
+}
+.word-pair__before { color: var(--color-error-700); }
+.word-pair__after  { color: var(--color-success-700); }
+
+/* Transition cards */
+.transition-card {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning-200);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-50);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.transition-card__position {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-warning-700);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.transition-card__text {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-700);
+}
+.transition-card__suggestion {
+  font-size: var(--font-size-sm);
+  color: var(--color-success-700);
+  background: var(--color-success-50);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--color-success-500);
+}
+
+/* DEC structure */
+.dec-item {
+  border: 1px solid var(--color-neutral-200);
+  border-left: 4px solid;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+}
+.dec-item--present { border-left-color: var(--color-success-500); }
+.dec-item--missing { border-left-color: var(--color-error-500); }
+
+.dec-item__icon { font-size: var(--font-size-lg); flex-shrink: 0; }
+.dec-item__body { flex: 1; }
+.dec-item__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+.dec-item__name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-800);
+}
+.dec-item__feedback {
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+}
+
+/* Final answer */
+.final-answer {
+  background: var(--color-neutral-50);
+  border: 1px solid var(--color-neutral-200);
+  border-left: 4px solid var(--color-primary-500);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--color-neutral-800);
+  white-space: pre-wrap;
+}
+
+/* Actions */
+.diagnosis__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}

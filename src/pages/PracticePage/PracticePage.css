@@ -1,0 +1,31 @@
+.practice-page { display: flex; flex-direction: column; gap: var(--space-6); }
+
+.practice-page__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-500);
+}
+.practice-page__breadcrumb a {
+  color: var(--color-primary-600);
+  text-decoration: none;
+}
+.practice-page__breadcrumb a:hover { text-decoration: underline; }
+
+.practice-page__card {
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+}
+
+.practice-page__empty {
+  text-align: center;
+  padding: var(--space-16);
+  color: var(--color-neutral-500);
+}
+.practice-page__empty-icon {
+  font-size: 48px;
+  margin-bottom: var(--space-4);
+}
