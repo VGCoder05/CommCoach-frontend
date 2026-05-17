@@ -32,10 +32,10 @@ const App = () => (
       }
     >
       <Route index                           element={<DashboardPage />}    />
-      <Route path="questions"                element={<QuestionBankPage />} />
-      <Route path="practice/:questionId"     element={<PracticePage />}     />
-      <Route path="progress"                 element={<ProgressPage />}     />
-      <Route path="history"                  element={<HistoryPage />}      />
+      <Route path="/questions"                element={<QuestionBankPage />} />
+      <Route path="/practice/:questionId"     element={<PracticePage />}     />
+      <Route path="/progress"                 element={<ProgressPage />}     />
+      <Route path="/history"                  element={<HistoryPage />}      />
     </Route>
 
     <Route path="*" element={<Navigate to="/" replace />} />
