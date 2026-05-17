@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-// Simple mobile detection
-const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-
 export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   const [answer, setAnswer] = useState('');
 
@@ -12,9 +9,9 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
     listening,
     resetTranscript,
     browserSupportsSpeechRecognition,
+    browserSupportsContinuousListening, 
   } = useSpeechRecognition();
 
-  // Sync transcript → answer
   useEffect(() => {
     if (transcript) setAnswer(transcript);
   }, [transcript]);
@@ -27,8 +24,8 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
     } else {
       resetTranscript();
       SpeechRecognition.startListening({
-        continuous: !isMobile,
-        language: 'en-US',    
+        continuous: browserSupportsContinuousListening, 
+        language: 'en-US',
       });
     }
   };
@@ -47,8 +44,9 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
     answer,
     setAnswer,
     wordCount,
-    listening,          
+    listening,
     browserSupportsSpeechRecognition,
+    browserSupportsContinuousListening, 
     handleToggleVoice,
     handleClear,
     handleSubmit,
