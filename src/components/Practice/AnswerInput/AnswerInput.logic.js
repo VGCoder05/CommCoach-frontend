@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { useState } from 'react';
+import { useVoskSpeechRecognition } from '../../../hooks/useVoskSpeechRecognition';
 
 export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   const [answer, setAnswer] = useState('');
@@ -7,26 +7,24 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   const {
     transcript,
     listening,
+    isLoading,
+    startListening,
+    stopListening,
     resetTranscript,
-    browserSupportsSpeechRecognition,
-    browserSupportsContinuousListening, 
-  } = useSpeechRecognition();
+  } = useVoskSpeechRecognition();
 
   useEffect(() => {
-    if (transcript) setAnswer(transcript);
+    if (transcript) setAnswer(transcript.trim());
   }, [transcript]);
 
   const wordCount = answer.trim().split(/\s+/).filter(Boolean).length;
 
   const handleToggleVoice = () => {
     if (listening) {
-      SpeechRecognition.stopListening();
+      stopListening();
     } else {
       resetTranscript();
-      SpeechRecognition.startListening({
-        continuous: browserSupportsContinuousListening, 
-        language: 'en-US',
-      });
+      startListening();
     }
   };
 
@@ -45,8 +43,7 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
     setAnswer,
     wordCount,
     listening,
-    browserSupportsSpeechRecognition,
-    browserSupportsContinuousListening, 
+    isLoading,
     handleToggleVoice,
     handleClear,
     handleSubmit,

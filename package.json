@@ -23,7 +23,8 @@
     "react-speech-recognition": "^4.0.1",
     "react-toastify": "^11.1.0",
     "recharts": "^3.8.1",
-    "regenerator-runtime": "^0.14.1"
+    "regenerator-runtime": "^0.14.1",
+    "vosk-browser": "^0.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
