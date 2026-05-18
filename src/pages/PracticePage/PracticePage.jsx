@@ -1,72 +1,221 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { usePracticePageLogic } from './PracticePage.logic';
-import AnswerInput      from '../../components/Practice/AnswerInput/AnswerInput';
-import DiagnosisDisplay from '../../components/Practice/DiagnosisDisplay/DiagnosisDisplay';
-import RedoPrompt       from '../../components/Practice/RedoPrompt/RedoPrompt';
-import Loader           from '../../components/Common/Loader/Loader';
 import './PracticePage.css';
 
 const PracticePage = () => {
   const {
-    currentQuestion,
-    currentSession,
-    diagnosis,
-    isDiagnosing,
-    showInput,
-    showDiagnosis,
-    handleSubmitAnswer,
-    handleTryAgain,
-    handleComplete,
+    sessionData,
+    textInputBuffer,
+    setTextInputBuffer,
+    isEvaluating,
+    errorMessage,
+    latestReport,
+    handleSubmit,
+    handleCompleteSession,
   } = usePracticePageLogic();
 
-  if (!currentQuestion) return <Loader message="Loading question…" />;
+  // ── Loading state ──────────────────────────────────────────
+  if (!sessionData) {
+    return (
+      <div className="practice-page__loading">
+        <div className="practice-page__spinner" aria-hidden="true" />
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  const question = sessionData.questionId;
+  const attempts = sessionData.attempts ?? [];
+  const hasAttempts = attempts.length > 0;
 
   return (
     <div className="practice-page fade-in">
-      {/* Breadcrumb */}
-      <nav className="practice-page__breadcrumb" aria-label="Breadcrumb">
-        <Link to="/questions">Question Bank</Link>
-        <span>›</span>
-        <span>{currentQuestion.title}</span>
-      </nav>
 
-      <div className="practice-page__card">
-        {/* Initial answer input */}
-        {showInput && !isDiagnosing && (
-          <AnswerInput
-            question={currentQuestion}
-            onSubmit={handleSubmitAnswer}
-            isDiagnosing={isDiagnosing}
-          />
-        )}
+      {/* ── Header ───────────────────────────────────────── */}
+      <header className="practice-page__header">
+        <div className="practice-page__header-text">
+          <h2 className="practice-page__title">
+            {question?.title || 'Practice Session'}
+          </h2>
 
-        {/* Loading state */}
-        {isDiagnosing && <Loader message="AI is analyzing your answer…" />}
+          <p className="practice-page__category">
+            Category:{' '}
+            <strong>{question?.category || 'General'}</strong>
+          </p>
+        </div>
 
-        {/* First diagnosis result */}
-        {showDiagnosis && diagnosis.attemptNumber === 1 && (
-          <DiagnosisDisplay
-            diagnosis={diagnosis}
-            onTryAgain={handleTryAgain}
-            onComplete={handleComplete}
-          />
-        )}
+        <span
+          className={`practice-page__status-pill practice-page__status-pill--${sessionData.status}`}
+          aria-label={`Session status: ${sessionData.status}`}
+        >
+          {sessionData.status?.toUpperCase()}
+        </span>
+      </header>
 
-        {/* Redo prompt after first attempt */}
-        {showDiagnosis && diagnosis.attemptNumber > 1 && (
-          <RedoPrompt
-            question={currentQuestion}
-            previousDiagnosis={diagnosis}
-            sessionId={currentSession?._id}
-            onSubmit={handleSubmitAnswer}
-            onComplete={handleComplete}
-            isDiagnosing={isDiagnosing}
-          />
-        )}
+      {/* ── Error banner ─────────────────────────────────── */}
+      {errorMessage && (
+        <div className="practice-page__error" role="alert">
+          <strong>Error:</strong> {errorMessage}
+        </div>
+      )}
+
+      {/* ── Two-column grid ──────────────────────────────── */}
+      <div className="practice-page__grid">
+
+        {/* Left — question + answer form */}
+        <section className="practice-page__card practice-page__card--input">
+          <div className="practice-page__question-block">
+            <h4 className="practice-page__question-label">Question</h4>
+            <p className="practice-page__question-text">
+              {question?.description || 'Answer the question clearly.'}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="practice-page__form">
+            <label
+              htmlFor="responseTextField"
+              className="practice-page__form-label"
+            >
+              Your Answer
+            </label>
+
+            <textarea
+              id="responseTextField"
+              className="practice-page__textarea"
+              rows={10}
+              disabled={isEvaluating}
+              value={textInputBuffer}
+              onChange={(e) => setTextInputBuffer(e.target.value)}
+              placeholder="Type your answer here…"
+            />
+
+            <div className="practice-page__form-actions">
+              <button
+                type="submit"
+                className="practice-page__btn practice-page__btn--primary"
+                disabled={isEvaluating || !textInputBuffer.trim()}
+              >
+                {isEvaluating ? 'Evaluating…' : 'Submit Answer'}
+              </button>
+
+              {hasAttempts && (
+                <button
+                  type="button"
+                  className="practice-page__btn practice-page__btn--secondary"
+                  disabled={isEvaluating}
+                  onClick={handleCompleteSession}
+                >
+                  Complete Session
+                </button>
+              )}
+            </div>
+          </form>
+        </section>
+
+        {/* Right — AI feedback + history */}
+        <section className="practice-page__card practice-page__card--feedback">
+          <h3 className="practice-page__feedback-title">AI Feedback</h3>
+
+          {/* Evaluating loader */}
+          {isEvaluating && (
+            <div className="practice-page__eval-loader" aria-live="polite">
+              <div className="practice-page__spinner" aria-hidden="true" />
+              <p>AI is evaluating your answer…</p>
+            </div>
+          )}
+
+          {/* Latest result */}
+          {latestReport && !isEvaluating && (
+            <div className="practice-page__result fade-in">
+              <h4 className="practice-page__result-heading">
+                Attempt #{latestReport.attemptNumber}
+              </h4>
+
+              <div className="practice-page__scores">
+                <ScoreBox
+                  label="Overall"
+                  value={latestReport.scores?.overall}
+                  highlight
+                />
+                <ScoreBox
+                  label="Vocabulary"
+                  value={latestReport.scores?.vocabulary}
+                />
+                <ScoreBox
+                  label="Flow"
+                  value={latestReport.scores?.flow}
+                />
+                <ScoreBox
+                  label="Structure"
+                  value={latestReport.scores?.structure}
+                />
+              </div>
+
+              <div className="practice-page__feedback-block">
+                <h5 className="practice-page__feedback-block-title">
+                  Feedback
+                </h5>
+                <p>{latestReport.diagnosisData?.feedback}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Attempt history */}
+          <div className="practice-page__history">
+            <h4 className="practice-page__history-title">
+              Attempts ({attempts.length})
+            </h4>
+
+            {hasAttempts ? (
+              attempts
+                .slice()
+                .reverse()
+                .map((attempt) => (
+                  <AttemptRow
+                    key={attempt._id ?? attempt.attemptNumber}
+                    attempt={attempt}
+                  />
+                ))
+            ) : (
+              <p className="practice-page__history-empty">No attempts yet.</p>
+            )}
+          </div>
+        </section>
       </div>
     </div>
   );
 };
+
+// ── Small presentational sub-components ───────────────────────
+
+const ScoreBox = ({ label, value, highlight = false }) => (
+  <div
+    className={[
+      'practice-page__score-box',
+      highlight ? 'practice-page__score-box--highlight' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')}
+  >
+    <span className="practice-page__score-label">{label}</span>
+    <span className="practice-page__score-value">{value}/10</span>
+  </div>
+);
+
+const AttemptRow = ({ attempt }) => (
+  <div className="practice-page__attempt">
+    <div className="practice-page__attempt-header">
+      <span>Attempt #{attempt.attemptNumber}</span>
+      <span>
+        Score: <strong>{attempt.scores?.overall}/10</strong>
+      </span>
+    </div>
+    <div className="practice-page__attempt-body">
+      <p className="practice-page__attempt-answer">
+        <strong>Answer:</strong> "{attempt.rawAnswer}"
+      </p>
+    </div>
+  </div>
+);
 
 export default PracticePage;

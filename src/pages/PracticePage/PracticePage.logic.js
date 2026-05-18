@@ -1,68 +1,132 @@
-import { useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { getQuestion } from '../../store/slices/questionSlice';
 import {
+  getSession,
   submitAnswer,
   completeSession,
-  clearSession,
-} from '../../store/slices/sessionSlice';
+} from '../../services/sessionService';
 
 export const usePracticePageLogic = () => {
   const { questionId } = useParams();
-  const navigate        = useNavigate();
-  const dispatch        = useDispatch();
+  const sessionId = questionId;
+  const navigate = useNavigate();
 
-  const { currentQuestion }                   = useSelector((s) => s.questions);
-  const { currentSession, diagnosis, isDiagnosing } = useSelector((s) => s.session);
+  const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    if (questionId) dispatch(getQuestion(questionId));
-    return () => { dispatch(clearSession()); };
-  }, [questionId, dispatch]);
+  const [sessionData, setSessionData] = useState(null);
+  const [textInputBuffer, setTextInputBuffer] = useState('');
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [latestReport, setLatestReport] = useState(null);
+  console.log("sessionId at frontend: ", questionId)
 
-  const handleSubmitAnswer = async (rawAnswer) => {
-    if (!currentSession?._id) {
-      toast.error('No active session. Please start again.');
+  // ── Fetch session ──────────────────────────────────────────
+  const fetchSession = useCallback(async () => {
+    if (!sessionId) {
+      setErrorMessage('Session ID missing.');
       return;
     }
+
     try {
-      await dispatch(submitAnswer({ sessionId: currentSession._id, rawAnswer })).unwrap();
-    } catch (err) {
-      toast.error(err || 'Analysis failed. Please try again.');
+      const response = await getSession(sessionId, token);
+
+      if (response?.success) {
+        setSessionData(response.session);
+        setIsEvaluating(response.session.status === 'processing');
+      }
+    } catch (error) {
+      console.error('Error fetching session:', error);
+      setErrorMessage(error.message || 'Failed to fetch session.');
     }
-  };
+  }, [sessionId, token]);
 
-  const handleTryAgain = () => {
-    // diagnosis stays in Redux — RedoPrompt reads it as previousDiagnosis
-  };
+  // ── Initial fetch ──────────────────────────────────────────
+  useEffect(() => {
+    fetchSession();
+  }, [fetchSession]);
 
-  const handleComplete = async () => {
-    if (currentSession?._id) {
+  // ── Polling while processing ───────────────────────────────
+  useEffect(() => {
+    if (sessionData?.status !== 'processing') return;
+
+    const interval = setInterval(async () => {
       try {
-        await dispatch(completeSession(currentSession._id)).unwrap();
-        toast.success('Session completed! 🎉');
-      } catch (_) {
-        // non-critical
+        const response = await getSession(sessionId, token);
+
+        if (response?.success) {
+          setSessionData(response.session);
+
+          if (response.session.status !== 'processing') {
+            setIsEvaluating(false);
+            clearInterval(interval);
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+        clearInterval(interval);
+        setIsEvaluating(false);
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [sessionData?.status, sessionId, token]);
+
+  // ── Submit answer ──────────────────────────────────────────
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!textInputBuffer.trim()) {
+      setErrorMessage('Please enter your answer.');
+      return;
+    }
+
+    try {
+      setIsEvaluating(true);
+      setErrorMessage(null);
+      setLatestReport(null);
+
+      // console.log("sessionId, textInputBuffer, token:", sessionId, textInputBuffer, token)
+      const response = await submitAnswer(sessionId, textInputBuffer, token);
+
+      if (response?.success) {
+        setLatestReport(response.attempt);
+        setTextInputBuffer('');
+        await fetchSession();
+      }
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+
+      if (error.status === 423 || error.message?.includes('lock')) {
+        setErrorMessage('Evaluation already in progress.');
+      } else {
+        setIsEvaluating(false);
+        setErrorMessage(error.message || 'Failed to submit answer.');
       }
     }
-    navigate('/history');
   };
 
-  // Decide which view to show
-  const showInput    = !diagnosis;
-  const showDiagnosis = diagnosis && !isDiagnosing;
+  // ── Complete session ───────────────────────────────────────
+  const handleCompleteSession = async () => {
+    try {
+      const response = await completeSession(sessionId, token);
+
+      if (response?.success) {
+        navigate('/history');
+      }
+    } catch (error) {
+      console.error('Error completing session:', error);
+      setErrorMessage(error.message || 'Failed to complete session.');
+    }
+  };
 
   return {
-    currentQuestion,
-    currentSession,
-    diagnosis,
-    isDiagnosing,
-    showInput,
-    showDiagnosis,
-    handleSubmitAnswer,
-    handleTryAgain,
-    handleComplete,
+    sessionData,
+    textInputBuffer,
+    setTextInputBuffer,
+    isEvaluating,
+    errorMessage,
+    latestReport,
+    handleSubmit,
+    handleCompleteSession,
   };
 };
