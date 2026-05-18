@@ -5,18 +5,13 @@ import './AnswerInput.css';
 
 const AnswerInput = ({ question, onSubmit, isDiagnosing }) => {
   const {
-    answer,
-    setAnswer,
-    wordCount,
-    listening,
-    browserSupportsSpeechRecognition,
-    handleToggleVoice,
-    handleClear,
-    handleSubmit,
+    answer, setAnswer, wordCount,
+    listening, isLoading, error,
+    handleToggleVoice, handleClear, handleSubmit,
   } = useAnswerInputLogic({ onSubmit, isDiagnosing });
 
   const difficultyVariant =
-    question.difficulty === 'advanced' ? 'error' :
+    question.difficulty === 'advanced'     ? 'error'   :
     question.difficulty === 'intermediate' ? 'warning' : 'success';
 
   return (
@@ -53,23 +48,32 @@ const AnswerInput = ({ question, onSubmit, isDiagnosing }) => {
         <span className="answer-input__word-count">{wordCount} words</span>
 
         <div className="answer-input__actions">
-          {/* {browserSupportsSpeechRecognition && ( */}
-            <button
-              type="button"
-              className={`record-btn ${listening ? 'record-btn--active' : ''}`}
-              onClick={handleToggleVoice}
-            >
-              {console.log(listening)}
-              {listening ? (
-                <>
-                  <span className="record-dot" />
-                  Stop Recording
-                </>
-              ) : (
-                <>🎙 Voice Input</>
-              )}
-            </button>
-          {/* )} */}
+
+          {/* ✅ Voice button — 3 distinct states: loading / active / idle */}
+          <button
+            type="button"
+            className={`record-btn ${listening ? 'record-btn--active' : ''} ${isLoading ? 'record-btn--loading' : ''}`}
+            onClick={handleToggleVoice}
+            disabled={isLoading || !!error}
+            title={error ? `Speech error: ${error}` : isLoading ? 'Loading speech model…' : ''}
+            aria-label={isLoading ? 'Loading speech model' : listening ? 'Stop recording' : 'Start voice input'}
+          >
+            {isLoading ? (
+              <>
+                <span className="record-spinner" aria-hidden="true" />
+                Loading model…
+              </>
+            ) : error ? (
+              <>⚠️ Speech unavailable</>
+            ) : listening ? (
+              <>
+                <span className="record-dot" />
+                Stop Recording
+              </>
+            ) : (
+              <>🎙 Voice Input</>
+            )}
+          </button>
 
           {answer && (
             <Button variant="ghost" size="sm" onClick={handleClear}>

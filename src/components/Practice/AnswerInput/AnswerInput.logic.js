@@ -7,7 +7,8 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   const {
     transcript,
     listening,
-    isLoading,
+    isLoading,   // ✅ expose to UI
+    error,       // ✅ expose to UI
     startListening,
     stopListening,
     resetTranscript,
@@ -20,14 +21,12 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   const wordCount = answer.trim().split(/\s+/).filter(Boolean).length;
 
   const handleToggleVoice = () => {
-    console.log("Trigger")
-    console.log(listening)
-
+    if (isLoading) return; // guard
     if (listening) {
       stopListening();
     } else {
-      startListening();
       resetTranscript();
+      startListening();
     }
   };
 
@@ -42,13 +41,8 @@ export const useAnswerInputLogic = ({ onSubmit, isDiagnosing }) => {
   };
 
   return {
-    answer,
-    setAnswer,
-    wordCount,
-    listening,
-    isLoading,
-    handleToggleVoice,
-    handleClear,
-    handleSubmit,
+    answer, setAnswer, wordCount,
+    listening, isLoading, error,  // ✅ both passed out
+    handleToggleVoice, handleClear, handleSubmit,
   };
 };

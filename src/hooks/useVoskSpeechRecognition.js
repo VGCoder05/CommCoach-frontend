@@ -1,47 +1,55 @@
 import { useState, useEffect, useRef } from 'react';
 import { createModel } from 'vosk-browser';
 
-export const useVoskSpeechRecognition = () => {
-  const [transcript, setTranscript] = useState('');
-  const [listening, setListening] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  const modelRef = useRef(null);
-  const recognizerRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
+// ✅ Module-level cache — survives component remounts, resets only on page refresh
+let cachedModel = null;
+let cachedRecognizer = null;
+let modelLoadError = null;
 
-  // Load model on mount
+export const useVoskSpeechRecognition = () => {
+  const [transcript, setTranscript]   = useState('');
+  const [listening,  setListening]    = useState(false);
+  // ✅ If cache already has the model, start as NOT loading
+  const [isLoading,  setIsLoading]    = useState(!cachedModel);
+  const [error,      setError]        = useState(modelLoadError);
+
+  const recognizerRef  = useRef(cachedRecognizer);
+  const audioContextRef = useRef(null);
+  const streamRef       = useRef(null);
+  const processorRef    = useRef(null);
+
   useEffect(() => {
+    // ✅ Model already loaded from a previous mount — skip loading entirely
+    if (cachedModel && cachedRecognizer) {
+      recognizerRef.current = cachedRecognizer;
+      setIsLoading(false);
+      return;
+    }
+
     const loadModel = async () => {
       try {
-        
-        const model = await createModel('/models/vosk-model-small-en-us-0.15.tar.gz');
-        modelRef.current = model;
-        
-        
+        const model = await createModel('https://ccoreilly.github.io/vosk-browser/models/vosk-model-small-en-us-0.15.tar.gz');
+
         const recognizer = new model.KaldiRecognizer(16000);
-        recognizerRef.current = recognizer;
-        
+
         recognizer.on('result', (message) => {
-          const result = message.result?.text;
-          if (result) {
-            setTranscript(prev => (prev + ' ' + result).trim());
-          }
+          const text = message.result?.text;
+          if (text) setTranscript(prev => (prev + ' ' + text).trim());
         });
 
         recognizer.on('partialresult', (message) => {
-          // Optional: show partial results while speaking
-          const partial = message.result?.partial;
-          if (partial) {
-            console.log('Partial:', partial);
-          }
+          console.log('Partial:', message.result?.partial);
         });
-        
+
+        // ✅ Save to module-level cache
+        cachedModel      = model;
+        cachedRecognizer = recognizer;
+        recognizerRef.current = recognizer;
+
         setIsLoading(false);
       } catch (err) {
-        console.error('Vosk model load error:', err);
-        setError(err.message);
+        modelLoadError = err.message || 'Failed to load model';
+        setError(modelLoadError);
         setIsLoading(false);
       }
     };
@@ -49,73 +57,57 @@ export const useVoskSpeechRecognition = () => {
     loadModel();
 
     return () => {
-      if (recognizerRef.current) {
-        recognizerRef.current.remove();
-      }
-      if (modelRef.current) {
-        modelRef.current.terminate();
-      }
+      // ✅ Do NOT terminate on unmount — model stays cached for reuse
+      // Only disconnect audio resources
     };
   }, []);
 
   const startListening = async () => {
-    if (!recognizerRef.current || isLoading) {
-      console.warn('Model not loaded yet');
-      return;
-    }
+    if (!recognizerRef.current || isLoading) return;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000,
-        } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
       });
-      
-      const audioContext = new AudioContext({ sampleRate: 16000 });
-      const source = audioContext.createMediaStreamSource(stream);
-      
-      
-      await recognizerRef.current.acceptWaveform(source);
-      
+
+      streamRef.current = stream;
+
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+
+      const source    = audioContext.createMediaStreamSource(stream);
+      const processor = audioContext.createScriptProcessor(4096, 1, 1);
+      processorRef.current = processor;
+
+      processor.onaudioprocess = (event) => {
+        recognizerRef.current?.acceptWaveform(event.inputBuffer);
+      };
+
+      source.connect(processor);
+      processor.connect(audioContext.destination);
+
       setListening(true);
-      mediaRecorderRef.current = { stream, audioContext, source };
     } catch (err) {
-      console.error('Mic access error:', err);
       setError('Microphone access denied');
     }
   };
 
   const stopListening = () => {
-    if (mediaRecorderRef.current) {
-      const { stream, audioContext, source } = mediaRecorderRef.current;
-      
-      // Stop all tracks
-      stream.getTracks().forEach(track => track.stop());
-      
-      // Disconnect and close
-      if (source) source.disconnect();
-      if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close();
-      }
-      
-      mediaRecorderRef.current = null;
+    processorRef.current?.disconnect();
+    processorRef.current = null;
+
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+
+    if (audioContextRef.current?.state !== 'closed') {
+      audioContextRef.current?.close();
     }
+    audioContextRef.current = null;
+
     setListening(false);
   };
 
-  const resetTranscript = () => {
-    setTranscript('');
-  };
+  const resetTranscript = () => setTranscript('');
 
-  return {
-    transcript,
-    listening,
-    isLoading,
-    error,
-    startListening,
-    stopListening,
-    resetTranscript,
-  };
+  return { transcript, listening, isLoading, error, startListening, stopListening, resetTranscript };
 };
