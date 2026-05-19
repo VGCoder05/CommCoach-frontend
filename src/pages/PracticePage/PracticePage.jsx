@@ -1,5 +1,6 @@
 import React from 'react';
 import { usePracticePageLogic } from './PracticePage.logic';
+import DetailedReport from './DetailedReport';
 import './PracticePage.css';
 
 const PracticePage = () => {
@@ -27,6 +28,8 @@ const PracticePage = () => {
   const question = sessionData.questionId;
   const attempts = sessionData.attempts ?? [];
   const hasAttempts = attempts.length > 0;
+
+  // console.log("latestReport:", latestReport)
 
   return (
     <div className="practice-page fade-in">
@@ -126,38 +129,7 @@ const PracticePage = () => {
 
           {/* Latest result */}
           {latestReport && !isEvaluating && (
-            <div className="practice-page__result fade-in">
-              <h4 className="practice-page__result-heading">
-                Attempt #{latestReport.attemptNumber}
-              </h4>
-
-              <div className="practice-page__scores">
-                <ScoreBox
-                  label="Overall"
-                  value={latestReport.scores?.overall}
-                  highlight
-                />
-                <ScoreBox
-                  label="Vocabulary"
-                  value={latestReport.scores?.vocabulary}
-                />
-                <ScoreBox
-                  label="Flow"
-                  value={latestReport.scores?.flow}
-                />
-                <ScoreBox
-                  label="Structure"
-                  value={latestReport.scores?.structure}
-                />
-              </div>
-
-              <div className="practice-page__feedback-block">
-                <h5 className="practice-page__feedback-block-title">
-                  Feedback
-                </h5>
-                <p>{latestReport.diagnosisData?.feedback}</p>
-              </div>
-            </div>
+             <DetailedReport latestReport={latestReport} ScoreBox={ScoreBox} /> 
           )}
 
           {/* Attempt history */}
@@ -181,6 +153,7 @@ const PracticePage = () => {
             )}
           </div>
         </section>
+        
       </div>
     </div>
   );

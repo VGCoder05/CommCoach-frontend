@@ -7,32 +7,57 @@ import './Layout.css';
 const Layout = () => {
   const {
     sidebarOpen,
+    sidebarCollapsed,
     toggleSidebar,
+    toggleCollapse,
     closeSidebar,
     pageTitle,
     user,
     userInitials,
     currentPath,
     handleLogout,
+    isMobile,
   } = useLayoutLogic();
 
   return (
     <div className="shell">
-      {/* Sidebar overlay (mobile) */}
-      {sidebarOpen && (
+      {/* Sidebar overlay (mobile only) */}
+      {sidebarOpen && isMobile && (
         <div className="sidebar-overlay" onClick={closeSidebar} aria-hidden="true" />
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
+      <aside 
+        className={`sidebar ${
+          isMobile 
+            ? (sidebarOpen ? 'sidebar--open' : 'sidebar--closed')
+            : (sidebarCollapsed ? 'sidebar--collapsed' : 'sidebar--expanded')
+        }`}
+      >
         {/* Logo */}
-        <NavLink to="/" className="sidebar__logo" onClick={closeSidebar}>
+        <NavLink 
+          to="/" 
+          className="sidebar__logo" 
+          onClick={isMobile ? closeSidebar : undefined}
+        >
           <div className="sidebar__logo-icon">🎯</div>
-          <div>
+          <div className="sidebar__logo-content">
             <div className="sidebar__logo-text">CommCoach</div>
             <div className="sidebar__logo-sub">Interview Prep</div>
           </div>
         </NavLink>
+
+        {/* Desktop collapse toggle */}
+        {!isMobile && (
+          <button 
+            className="sidebar__toggle" 
+            onClick={toggleCollapse}
+            aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {sidebarCollapsed ? '▶' : '◀'}
+          </button>
+        )}
 
         {/* Nav */}
         <nav className="sidebar__nav" aria-label="Main navigation">
@@ -44,10 +69,11 @@ const Layout = () => {
               className={({ isActive }) =>
                 `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
               }
-              onClick={closeSidebar}
+              onClick={isMobile ? closeSidebar : undefined}
+              title={sidebarCollapsed ? label : undefined}
             >
               <span className="sidebar__link-icon">{icon}</span>
-              {label}
+              <span className="sidebar__link-label">{label}</span>
             </NavLink>
           ))}
         </nav>
@@ -65,28 +91,50 @@ const Layout = () => {
               </div>
             </div>
           )}
-          <Button variant="ghost" size="sm" fullWidth onClick={handleLogout}>
-            🚪 Sign Out
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            fullWidth 
+            onClick={handleLogout}
+            className="sidebar__logout-btn"
+          >
+            <span className="sidebar__logout-icon">🚪</span>
+            <span className="sidebar__logout-label">Sign Out</span>
           </Button>
         </div>
+
+        {/* Mobile close button */}
+        {isMobile && sidebarOpen && (
+          <button 
+            className="sidebar__close" 
+            onClick={closeSidebar}
+            aria-label="Close sidebar"
+          >
+            ✕
+          </button>
+        )}
       </aside>
 
       {/* Main */}
-      <div className="main-area">
+      <div className={`main-area ${
+        !isMobile && !sidebarCollapsed ? 'main-area--sidebar-expanded' : ''
+      }`}>
         {/* Topbar */}
         <header className="topbar">
           <div className="topbar__left">
-            <button
-              className="topbar__menu-btn"
-              onClick={toggleSidebar}
-              aria-label="Toggle navigation"
-            >
-              ☰
-            </button>
+            {isMobile && (
+              <button
+                className="topbar__menu-btn"
+                onClick={toggleSidebar}
+                aria-label="Toggle navigation"
+              >
+                ☰
+              </button>
+            )}
             <h1 className="topbar__title">{pageTitle}</h1>
           </div>
           <div className="topbar__right">
-            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-500)' }}>
+            <span className="topbar__greeting">
               Hi, {user?.name?.split(' ')[0]} 👋
             </span>
           </div>

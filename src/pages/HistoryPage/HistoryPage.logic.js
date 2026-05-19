@@ -18,6 +18,7 @@ export const useHistoryLogic = () => {
 
   useEffect(() => {
     dispatch(getHistory({ page, limit: rowsPerPage, ...(statusFilter ? { status: statusFilter } : {}) }));
+
   }, [dispatch, page, rowsPerPage, statusFilter]);
 
   const handleStatusChange = (e) => {
@@ -42,6 +43,8 @@ export const useHistoryLogic = () => {
   };
 
   const getLastScore = (session) => {
+    console.log("session: ", session)
+
     if (!session.attempts?.length) return null;
     return session.attempts[session.attempts.length - 1].scores.overall;
   };

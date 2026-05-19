@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+// import { useDispatch, useSelector } from 'react-redux';
+
 import {
   getSession,
   submitAnswer,
@@ -17,8 +19,10 @@ export const usePracticePageLogic = () => {
   const [textInputBuffer, setTextInputBuffer] = useState('');
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  // const [latestReport, setLatestReport] = useState(null);
   const [latestReport, setLatestReport] = useState(null);
-  console.log("sessionId at frontend: ", questionId)
+
+  // const { sessions, isLoading } = useSelector((s) => s.session);
 
   // ── Fetch session ──────────────────────────────────────────
   const fetchSession = useCallback(async () => {
@@ -85,8 +89,8 @@ export const usePracticePageLogic = () => {
       setErrorMessage(null);
       setLatestReport(null);
 
-      // console.log("sessionId, textInputBuffer, token:", sessionId, textInputBuffer, token)
       const response = await submitAnswer(sessionId, textInputBuffer, token);
+      // console.log("Session After Submit : ", response)
 
       if (response?.success) {
         setLatestReport(response.attempt);
